@@ -21,7 +21,7 @@ Ansible-плейбук для автоматической установки и
 - [Шаблон конфигурации Vector](#шаблон-конфигурации-vector)
 - [Play 3: Install lighthouse](#play-3-install-lighthouse)
 - [Шаблон конфигурации lighthouse](#шаблон-конфигурации-lighthouse)
-- [Запуск Playbook](запуск-playbook)
+- [Запуск Playbook](#запуск-playbook)
 - [Проверка результата](#проверка-результата)
 
 
