@@ -19,9 +19,11 @@ Ansible-плейбук для автоматической установки и
 - [Play 1: Install ClickHouse](#play-1-install-clickhouse)
 - [Play 2: Install Vector](#play-2-install-vector)
 - [Шаблон конфигурации Vector](#шаблон-конфигурации-vector)
+- [Play 3: Install lighthouse](#play-3-install-lighthouse)
+- [Шаблон конфигурации lighthouse](#шаблон-конфигурации-lighthouse)
 - [Запуск Playbook](#запуск-playbook)
 - [Проверка результата](#проверка-результата)
-- [Ответы на вопросы](#ответы-на-вопросы)
+
 
 ---
 
@@ -313,6 +315,111 @@ encoding.codec = "json"
 
 ```
 
+## Play 3: Install lighthouse
+
+### Параметры play
+
+```yaml
+- name: Install lighthouse
+  hosts: lighthouse
+  become: true
+  become_user: root
+```
+
+
+
+### Задачи
+
+#### 1️⃣ Скачивание Epel
+
+```yaml
+name: Install epel-release
+      become: true
+      ansible.builtin.yum:
+        name: epel-release
+        state: present
+```
+
+#### 2️⃣ Установка веб сервера Nginx
+
+```yaml
+name: Install nginx
+      become: true
+      ansible.builtin.yum:
+        name: nginx
+        state: present
+```
+
+#### 3️⃣ Применение шаблона
+
+```yaml
+name:  Configure
+      become: true
+      ansible.builtin.template:
+        src: nginx_config.j2
+        dest: /etc/nginx/conf.d/lighthouse.conf
+        mode: "0644"
+```
+
+#### 4️⃣ Установка Git
+
+```yaml
+-- name: Git Install
+      become: true
+      ansible.builtin.yum:
+        name: git
+        state: present
+
+```
+#### 4️⃣ Скачивание с репозитория
+
+```yaml
+name:  Clone repository
+      become: true
+      ansible.builtin.git:
+        repo: '{{ lighthouse_git }}'
+        dest: '{{ lighthouse_root_path }}'
+        version: master
+
+---
+
+```
+#### 5️⃣ Скачивание с репозитория
+
+```yaml
+name:  Clone repository
+      become: true
+      ansible.builtin.git:
+        repo: '{{ lighthouse_git }}'
+        dest: '{{ lighthouse_root_path }}'
+        version: master
+
+```
+#### 5️⃣ Запуск сервиса
+- name:  Start
+      become: true
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+---
+
+
+
+## Шаблон конфигурации lighthouse
+
+**Файл:** `templates/nginx_config.j2`
+```
+{
+  "clickhouse": {
+    "host": "{{ hostvars['clickhouse-dev-1'].ansible_host_internal }}",
+    "port": 8123,
+    "user": "default",
+    "password": ""
+  }
+}
+---
 ### Ключевые параметры
 
 | Параметр | Значение | Пояснение |
@@ -355,6 +462,10 @@ ansible-playbook -i inventory/prod.yml site.yml --start-at-task="Get clickhouse 
 ```bash
 ansible-playbook -i inventory/prod.yml site.yml --start-at-task="Get vector distrib"
 ```
+### Только lighthouse
+
+```bash
+ansible-playbook -i inventory/prod.yml site.yml --start-at-task="Install epel-release"
 
 ---
 
@@ -366,6 +477,7 @@ ansible-playbook -i inventory/prod.yml site.yml --start-at-task="Get vector dist
 # 1. Статус сервисов
 sudo systemctl status clickhouse-server
 sudo systemctl status vector
+sudo systemctl status clickhouse
 
 # 2. ClickHouse работает?
 curl -s http://localhost:8123/ping
@@ -374,16 +486,16 @@ curl -s http://localhost:8123/ping
 clickhouse-client -q "SELECT version();"
 
 # 3. База и таблица созданы?
-clickhouse-client -q "SHOW DATABASES;"
-clickhouse-client -q "SHOW TABLES FROM logs;"
-clickhouse-client -q "DESCRIBE logs.logs_table;"
+clickhouse-client --host 127.0.0.1 -q "SHOW DATABASES;"
+clickhouse-client --host 127.0.0.1 -q "SHOW TABLES FROM logs;"
+clickhouse-client --host 127.0.0.1 -q "DESCRIBE logs.logs_table;"
 # timestamp  String
 # message    String
 
 # 4. Данные идут?
-clickhouse-client -q "SELECT count() FROM logs.logs_table;"
+clickhouse-client --host 127.0.0.1 -q "SELECT count() FROM logs.logs_table;"
 sleep 15
-clickhouse-client -q "SELECT count() FROM logs.logs_table;"
+clickhouse-client --host 127.0.0.1 -q "SELECT count() FROM logs.logs_table;"
 # Счётчик растёт
 
 # 5. Логи Vector
@@ -392,13 +504,6 @@ sudo journalctl -u vector -n 20 --no-pager
 
 ```
 ---
-### Ответы на вопросы
-``
-# 1.Запуск с ключом Check.
-![Image alt](https://github.com/axeles-84/08-ansible-02-playbook/blob/main/images/check.PNG)
-
-# 2.Запуск с ключом Diff.
-![Image alt](https://github.com/axeles-84/08-ansible-02-playbook/blob/main/images/diff.PNG)
 
 # 3.Запуск с ключом Diff повторно.
 ![Image alt](https://github.com/axeles-84/08-ansible-02-playbook/blob/main/images/diff1.PNG)

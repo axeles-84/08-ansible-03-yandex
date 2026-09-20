@@ -125,7 +125,7 @@
         validate: /usr/bin/vector validate --config-toml %s
       notify: Restart vector service
 
-- name: Tasks file for lighthouse
+- name: Install lighthouse
   hosts: lighthouse
   become: true
   become_user: root
@@ -149,7 +149,7 @@
         dest: /etc/nginx/conf.d/lighthouse.conf
         mode: "0644"
 
-    - name: LightHouse Install
+    - name: Git Install
       become: true
       ansible.builtin.yum:
         name: git
@@ -166,5 +166,5 @@
       become: true
       ansible.builtin.service:
         name: nginx
-        state: started
+        state: restarted
         enabled: true
