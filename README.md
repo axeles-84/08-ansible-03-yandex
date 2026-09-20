@@ -21,7 +21,7 @@ Ansible-плейбук для автоматической установки и
 - [Шаблон конфигурации Vector](#шаблон-конфигурации-vector)
 - [Play 3: Install lighthouse](#play-3-install-lighthouse)
 - [Шаблон конфигурации lighthouse](#шаблон-конфигурации-lighthouse)
-- [Запуск Playbook](#запуск-playbook)
+- [Запуск Playbook](запуск-playbook)
 - [Проверка результата](#проверка-результата)
 
 
@@ -504,8 +504,5 @@ sudo journalctl -u vector -n 20 --no-pager
 
 ```
 ---
-
-# 3.Запуск с ключом Diff повторно.
-![Image alt](https://github.com/axeles-84/08-ansible-02-playbook/blob/main/images/diff1.PNG)
 
 <div align="center">
